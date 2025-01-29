@@ -49,8 +49,15 @@ architecture structural of floatingPointAdder is
     signal sum_sign_in: std_logic;
     -- sum control signals
     signal load_sum_sign: std_logic;
+    signal increment_sum_exp: std_logic;
+    signal load_sum: std_logic;
+    signal shift_sum_mantissa: std_logic;
+    signal shift_sum_mantissa_value: std_logic;
     -- sum register outputs
     signal sum_sign: std_logic;
+    signal sum_exp: std_logic_vector(6 downto 0);
+    signal sum_mant: std_logic_vector(7 downto 0);
+
 
 begin
 
@@ -110,11 +117,9 @@ begin
         PORT MAP(i_resetBar => reset_bar, i_d => sum_sign_in, i_enable => load_sum_sign, i_clock => GClock, o_q => sum_sign, o_qBar => OPEN);
 
     Exponent_Sum_Register: ENTITY work.sevenBitRegisterInc
-        PORT MAP();
+        PORT MAP(i_Value => exp_a_out, inc => increment_sum_exp, load => load_sum, clk => GClock, reset_bar => reset_bar, o_Value => sum_exp);
 
     Mantissa_Sum_Register: ENTITY work.eightBitShiftRight
-        PORT MAP();
-
-    
+        PORT MAP(i_Value => mant_operation_out, shift => shift_sum_mantissa, shift_value => shift_sum_mantissa_value, load => load_sum, clk => GClock, reset_bar => reset_bar, o_Value => sum_mant);
 
 end architecture structural;

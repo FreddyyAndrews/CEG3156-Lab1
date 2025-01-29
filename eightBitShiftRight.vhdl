@@ -1,47 +1,74 @@
-LIBRARY ieee;
-USE ieee.std_logic_1164.ALL;
+library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
 
-ENTITY eightBitShiftRight IS
-    PORT(
-        i_Value      : IN  STD_LOGIC_VECTOR(7 downto 0);
-        shift_value  : IN  STD_LOGIC;           -- Bit shifted into the leftmost position (bit 22)
-        shift : IN  STD_LOGIC;           -- Enables right shift
-        load         : IN  STD_LOGIC;           -- Loads i_Value in parallel
-        clk          : IN  STD_LOGIC;
-        reset_bar        : IN  STD_LOGIC;           -- Active-high reset
-        o_Value      : OUT STD_LOGIC_VECTOR(7 downto 0)
-    );
-END eightBitShiftRight;
+--============================================================
+-- Entity Declaration
+--============================================================
+entity eightBitShiftRight is
+  port(
+    clk          : in  std_logic;
+    reset_bar    : in  std_logic;
+    load         : in  std_logic;
+    shift        : in  std_logic;
+    shift_value  : in  std_logic;
+    i_Value      : in  std_logic_vector(7 downto 0);
+    o_Value      : out std_logic_vector(7 downto 0)
+  );
+end entity eightBitShiftRight;
 
-ARCHITECTURE structural OF eightBitShiftRight IS
-    -----------------------------------------------------------------
-    -- Internal signals:
-    --   shift_mux_out(i) = output of the shift/hold mux for bit i
-    --   next_val(i)      = output of the load vs. shift_mux_out mux for bit i
-    -----------------------------------------------------------------
-    SIGNAL next_val      : STD_LOGIC_VECTOR(7 downto 0);
+--============================================================
+-- Architecture
+--============================================================
+architecture structural of eightBitShiftRight is
 
-BEGIN
+  -- Internal register to store output data.
+  signal r_Value       : std_logic_vector(7 downto 0);
+  signal next_val      : std_logic_vector(7 downto 0);
+  signal shift_mux_out : std_logic_vector(7 downto 0);
 
-    GEN_BITS: FOR i IN 0 TO 7 GENERATE
-        LOAD_MUX: ENTITY work.mux2
-            PORT MAP(
-                sel  => load,
-                in0 => (shift_value) WHEN (i=22) ELSE o_Value(i+1),        -- Normal shift/hold path
-                in1 => i_Value(i),              -- Parallel load
-                outy => next_val(i)
-            );
+begin
 
-        BIT_FF: ENTITY work.enardFF_2
-            PORT MAP(
-                i_resetBar => reset_bar,
-                i_d        => next_val(i),
-                i_enable   => shift or load,
-                i_clock    => clk,
-                o_q        => o_Value(i),
-                o_qBar     => OPEN
-            );
+  -- Drive the entity's out port from the internal register
+  o_Value <= r_Value;
 
-    END GENERATE;
+  --==========================================================
+  -- SHIFT_MUX_OUT ASSIGNMENTS
+  --==========================================================
+  -- Bits 0 to 6: shift_mux_out(i) <= r_Value(i+1)
+  GEN_BITS_0_TO_6: for i in 0 to 6 generate
+  begin
+    shift_mux_out(i) <= r_Value(i + 1);
+  end generate GEN_BITS_0_TO_6;
 
-END structural;
+  -- Bit 7: shift_mux_out(7) <= shift_value
+  shift_mux_out(7) <= shift_value;
+
+  --==========================================================
+  -- Generate loop for multiplexing load vs. shift data,
+  -- and then registering it.
+  --==========================================================
+  GEN_BITS: for i in 0 to 7 generate
+
+    -- 2-to-1 mux: choose between shifted value or load input
+    LOAD_MUX: entity work.mux2
+      port map(
+        sel   => load,
+        in0   => shift_mux_out(i),
+        in1   => i_Value(i),
+        outy  => next_val(i)
+      );
+
+    -- Flip-flop with enable for shifting/loading
+    BIT_FF: entity work.enardFF_2
+      port map(
+        i_resetBar => reset_bar,
+        i_d        => next_val(i),
+        i_enable   => (shift or load),
+        i_clock    => clk,
+        o_q        => r_Value(i),
+        o_qBar     => open
+      );
+  end generate GEN_BITS;
+
+end architecture structural;
