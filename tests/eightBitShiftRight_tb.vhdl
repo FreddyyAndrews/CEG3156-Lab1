@@ -1,12 +1,10 @@
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
-USE ieee.std_logic_arith.ALL;
-USE ieee.std_logic_unsigned.ALL;
 
-ENTITY tb_eightBitShiftRight IS
-END tb_eightBitShiftRight;
+ENTITY eightBitShiftRight_tb IS
+END eightBitShiftRight_tb;
 
-ARCHITECTURE behavior OF tb_eightBitShiftRight IS
+ARCHITECTURE behavior OF eightBitShiftRight_tb IS
     -- Component Declaration for the Unit Under Test (UUT)
     COMPONENT eightBitShiftRight
         PORT(
