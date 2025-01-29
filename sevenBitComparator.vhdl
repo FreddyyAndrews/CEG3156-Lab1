@@ -11,8 +11,8 @@ END sevenBitComparator;
 
 architecture structural of sevenBitComparator is
     --define signals
-    signal gt_conditions: std_logic_vector(7 downto 0);
-    signal eq_conditions: std_logic_vector(7 downto 0);
+    signal gt_conditions: std_logic_vector(6 downto 0);
+    signal eq_conditions: std_logic_vector(6 downto 0);
 
 begin
 
